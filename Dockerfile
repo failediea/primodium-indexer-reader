@@ -1,4 +1,4 @@
-FROM node:18-slim
+FROM node:18.17-slim
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable
