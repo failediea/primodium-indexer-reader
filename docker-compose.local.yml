@@ -1,0 +1,48 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:16.1
+    restart: always
+    platform: linux/amd64
+    ports:
+      - 5432:5432
+    networks:
+      - indexer-network
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    volumes:
+      - /var/lib/postgresql/data
+
+  postgres-index-write:
+    image: ghcr.io/latticexyz/store-indexer:sha-338c8e5
+    restart: always
+    platform: linux/amd64
+    networks:
+      - indexer-network
+    environment:
+      RPC_HTTP_URL: http://host.docker.internal:8545
+      DEBUG: "mud:*"
+      DATABASE_URL: postgres://user:password@postgres/postgres
+    command: pnpm tsx bin/postgres-decoded-indexer
+
+  postgres-query-read:
+    image: pg-indexer-reader
+    build:
+      context: .
+    restart: always
+    platform: linux/amd64
+    networks:
+      - indexer-network
+    environment:
+      RPC_HTTP_URL: http://host.docker.internal:8545
+      DEBUG: "mud:*"
+      DATABASE_URL: postgres://user:password@postgres/postgres
+    ports:
+      - "3001:3001"
+    command: pnpm start
+
+networks:
+  indexer-network:
+    driver: bridge
